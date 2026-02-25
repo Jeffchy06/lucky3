@@ -3,115 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>抽獎輪盤 - 進階控盤版</title>
+    <title>抽獎輪盤 - 全螢幕優化版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto+Sans+TC', sans-serif; overflow-x: hidden; }
+        body { 
+            font-family: 'Noto+Sans+TC', sans-serif; 
+            overflow: hidden; /* 防止桌面版出現全域捲軸 */
+            background-color: #f8fafc;
+        }
         
+        /* 桌面版佈局容器：佔滿視窗 */
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 1024px) {
+            .app-container {
+                flex-direction: row;
+            }
+        }
+
+        /* 輪盤動態大小 */
         #wheel-container {
             position: relative;
-            width: 400px;
-            height: 400px;
+            width: 85vw;
+            height: 85vw;
+            max-width: 650px;
+            max-height: 650px;
             margin: 0 auto;
         }
+
         #canvas {
             width: 100%;
             height: 100%;
             transition: transform 5s cubic-bezier(0.2, 0, 0, 1);
             will-change: transform;
         }
+
         .pointer {
             position: absolute;
-            top: -40px;
+            top: -30px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 25px solid transparent;
-            border-right: 25px solid transparent;
-            border-top: 55px solid #ef4444;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-top: 60px solid #ef4444;
             z-index: 50;
-            filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3));
             pointer-events: none;
         }
+
         #wheel-container::after {
             content: '';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            background: radial-gradient(circle, #fff 30%, #888 100%);
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #fff 30%, #bbb 100%);
             border-radius: 50%;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             z-index: 45;
-            border: 5px solid #222;
+            border: 4px solid #333;
         }
+
         .prize-chip {
             transition: all 0.2s ease;
             cursor: pointer;
             border: 2px solid #e2e8f0;
-            user-select: none;
             display: flex;
             align-items: center;
             gap: 8px;
         }
+
         .prize-chip.active {
             background-color: #2563eb !important;
             color: white !important;
             border-color: #2563eb !important;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
         }
+
         .delete-prize {
-            color: #94a3b8;
-            font-size: 16px;
-            padding: 0 4px;
-            border-radius: 50%;
-            transition: all 0.2s;
+            opacity: 0.5;
+            transition: opacity 0.2s;
         }
-        .active .delete-prize {
-            color: rgba(255,255,255,0.7);
-        }
+
         .delete-prize:hover {
+            opacity: 1;
             color: #ef4444;
-            background: rgba(0,0,0,0.05);
         }
+
         .active .delete-prize:hover {
-            color: white;
-            background: rgba(255,255,255,0.2);
+            color: #ff9999;
         }
+
+        /* 隱藏捲軸但保持功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-10">
+<body class="bg-slate-50">
 
-    <div class="max-w-7xl mx-auto bg-white rounded-[4rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row">
-        <!-- 控制面板 -->
-        <div class="w-full lg:w-[26rem] p-10 bg-slate-50 border-r border-slate-100 relative z-20">
-            <h1 id="secret-trigger" class="text-3xl font-black mb-10 text-slate-800 cursor-pointer select-none">抽獎輪盤</h1>
-            
-            <div class="mb-10">
-                <div class="flex justify-end mb-4">
-                    <button onclick="openAddPrizeModal()" class="bg-blue-600 text-white text-[11px] font-bold px-4 py-2 rounded-full shadow-lg active:scale-95 transition-all">+ 新增獎項</button>
-                </div>
-                <input id="current-prize-input" type="text" class="w-full p-6 border-2 border-slate-200 rounded-[2rem] font-black text-blue-600 text-3xl mb-6 shadow-sm focus:border-blue-500 outline-none" value="頭獎">
-                <div id="prize-list" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2">
-                    <div onclick="selectPrize(this)" class="prize-chip active px-4 py-2 bg-white rounded-xl text-sm font-bold">
-                        <span>頭獎</span>
-                    </div>
-                    <div onclick="selectPrize(this)" class="prize-chip px-4 py-2 bg-white rounded-xl text-sm font-bold">
-                        <span>七獎</span>
-                        <span class="delete-prize" onclick="deletePrize(event, this)">×</span>
-                    </div>
-                </div>
+    <div class="app-container">
+        
+        <!-- 左側面板：控制區 -->
+        <div class="w-full lg:w-[28rem] bg-white border-r border-slate-200 flex flex-col h-full shadow-xl relative z-30">
+            <div class="p-8 pb-4">
+                <h1 id="secret-trigger" class="text-4xl font-black text-slate-800 cursor-pointer select-none tracking-tight">抽獎輪盤</h1>
             </div>
 
-            <div class="mb-8">
-                <div class="flex justify-between items-end mb-4">
-                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest">抽獎名單</label>
-                    <span id="participant-count" class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">參賽人數：0 位</span>
+            <div class="flex-1 overflow-y-auto p-8 pt-2 no-scrollbar">
+                <!-- 獎項區 -->
+                <div class="mb-10">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">當前獎項</span>
+                        <button onclick="openAddPrizeModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-full transition-all">+ 新增獎項</button>
+                    </div>
+                    <input id="current-prize-input" type="text" class="w-full p-5 border-2 border-slate-100 rounded-2xl font-black text-blue-600 text-3xl mb-6 shadow-sm focus:border-blue-500 outline-none transition-colors" value="頭獎">
+                    
+                    <div id="prize-list" class="flex flex-wrap gap-2">
+                        <div onclick="selectPrize(this)" class="prize-chip active px-4 py-2 bg-slate-50 rounded-xl text-sm font-bold">
+                            <span>頭獎</span>
+                        </div>
+                        <div onclick="selectPrize(this)" class="prize-chip px-4 py-2 bg-slate-50 rounded-xl text-sm font-bold">
+                            <span>七獎</span>
+                            <span class="delete-prize text-lg" onclick="deletePrize(event, this)">×</span>
+                        </div>
+                    </div>
                 </div>
-                <textarea id="names-input" class="w-full h-72 p-6 border-2 border-slate-200 rounded-[2rem] font-bold text-slate-700 shadow-inner focus:border-blue-500 outline-none" oninput="updateNames()">張三
+
+                <!-- 名單區 -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-end mb-4">
+                        <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">參賽名單</label>
+                        <span id="participant-count" class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">人數：0 位</span>
+                    </div>
+                    <textarea id="names-input" class="w-full h-[40vh] p-6 border-2 border-slate-100 rounded-[2rem] font-bold text-slate-700 shadow-inner focus:border-blue-500 outline-none resize-none" oninput="updateNames()">張三
 李四
 王五
 趙六
@@ -123,56 +156,63 @@
 員工D
 員工E
 員工F</textarea>
+                </div>
+
+                <button onclick="initWheel()" class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-black transition-all shadow-lg active:scale-[0.98]">重置轉盤數據</button>
             </div>
-            <button onclick="initWheel()" class="w-full bg-slate-900 text-white font-black py-5 rounded-[2rem] hover:bg-black transition-all shadow-lg">重整轉盤</button>
+            
+            <div class="p-6 bg-slate-50 border-t border-slate-100 text-center">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Premium Lottery System v2.0</p>
+            </div>
         </div>
 
-        <!-- 輪盤展示區 -->
-        <div class="flex-1 p-12 flex flex-col items-center justify-center bg-white relative">
-            <div id="wheel-container" class="mb-10">
+        <!-- 右側面板：輪盤區 -->
+        <div class="flex-1 flex flex-col items-center justify-center p-8 bg-[#fdfdfd] relative">
+            <div id="wheel-container" class="mb-12">
                 <div class="pointer"></div>
-                <canvas id="canvas" width="900" height="900"></canvas>
+                <canvas id="canvas" width="1000" height="1000"></canvas>
             </div>
 
-            <div class="text-center w-full max-w-sm">
-                <div id="status" class="text-slate-400 font-bold mb-6 text-xs uppercase tracking-widest">5 Second Spin Mode</div>
-                <button id="spin-btn" onclick="spin()" class="w-full bg-blue-600 text-white text-5xl font-black py-8 rounded-[3rem] shadow-xl active:scale-95 transition-all">
+            <div class="w-full max-w-xl text-center">
+                <div id="status" class="text-slate-300 font-black mb-6 text-sm uppercase tracking-[0.5em]">Ready to Spin (5.0s)</div>
+                <button id="spin-btn" onclick="spin()" class="w-full max-w-md bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-6xl font-black py-10 rounded-[3rem] shadow-[0_20px_50px_rgba(37,99,235,0.3)] transform active:scale-90 transition-all">
                     START
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 隱藏後台：規則 -->
-    <div id="secret-modal" class="hidden fixed inset-0 bg-slate-900/95 flex items-center justify-center z-[150] p-6 backdrop-blur-md">
-        <div class="bg-white rounded-[3rem] p-12 max-w-xl w-full shadow-2xl">
-            <h2 class="text-3xl font-black text-blue-600 mb-4">智能交錯控盤</h2>
-            <p class="text-slate-500 text-sm mb-6">格式：獎項=名字1,名字2|總次數<br>範例：七獎=新員工A,新員工B,新員工C|9</p>
-            <textarea id="rules-input" class="w-full h-40 p-6 border-2 border-slate-100 rounded-2xl font-mono text-lg mb-8" placeholder="七獎=新員工A,新員工B,新員工C|9"></textarea>
-            <div class="flex justify-end gap-4">
+    <!-- 隱藏後台：規則編輯器 -->
+    <div id="secret-modal" class="hidden fixed inset-0 bg-slate-900/95 flex items-center justify-center z-[150] p-6 backdrop-blur-xl">
+        <div class="bg-white rounded-[3rem] p-12 max-w-2xl w-full shadow-2xl">
+            <h2 class="text-3xl font-black text-blue-600 mb-2">智能交錯規則</h2>
+            <p class="text-slate-400 text-sm mb-8">格式：<code class="bg-slate-100 px-2 py-1 rounded text-red-500">獎項=名字A,名字B|總次數</code></p>
+            <textarea id="rules-input" class="w-full h-48 p-8 border-2 border-slate-100 rounded-3xl font-mono text-xl mb-8 outline-none focus:border-blue-500" placeholder="七獎=新員工A,新員工B,新員工C|9"></textarea>
+            <div class="flex justify-end gap-6">
                 <button onclick="closeModal()" class="px-8 py-3 text-slate-400 font-bold">取消</button>
-                <button onclick="saveRules()" class="px-10 py-3 bg-blue-600 text-white rounded-xl font-bold">儲存規則</button>
+                <button onclick="saveRules()" class="px-12 py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-blue-700">儲存並應用規則</button>
             </div>
         </div>
     </div>
 
-    <!-- 中獎畫面 -->
-    <div id="result-overlay" class="hidden fixed inset-0 bg-slate-900/98 flex items-center justify-center z-[200]">
-        <div class="bg-white p-16 rounded-[5rem] text-center shadow-2xl border-[20px] border-blue-600 max-w-md w-full">
-            <div id="result-prize-label" class="text-blue-600 text-2xl font-black mb-4 uppercase tracking-tighter"></div>
-            <div id="winner-name" class="text-8xl font-black text-slate-800 mb-10 tracking-tighter"></div>
-            <button onclick="closeResult()" class="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black text-2xl shadow-lg">確認</button>
+    <!-- 中獎通知 -->
+    <div id="result-overlay" class="hidden fixed inset-0 bg-slate-900/90 flex items-center justify-center z-[200] backdrop-blur-sm">
+        <div class="bg-white p-16 rounded-[4rem] text-center shadow-2xl border-[16px] border-blue-600 max-w-lg w-full transform animate-bounce-short">
+            <div id="result-prize-label" class="text-blue-600 text-3xl font-black mb-4 tracking-widest"></div>
+            <div class="h-px bg-slate-100 w-full my-8"></div>
+            <div id="winner-name" class="text-9xl font-black text-slate-800 mb-12 tracking-tighter"></div>
+            <button onclick="closeResult()" class="w-full py-8 bg-slate-900 text-white rounded-3xl font-black text-3xl shadow-2xl hover:bg-black transition-all">確認</button>
         </div>
     </div>
 
     <!-- 新增獎項彈窗 -->
-    <div id="add-prize-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[250]">
-        <div class="bg-white p-8 rounded-3xl w-80 shadow-2xl">
-            <h3 class="font-bold mb-4">新增獎項</h3>
-            <input id="new-prize-name" type="text" class="w-full p-4 border rounded-xl mb-4 font-bold" placeholder="例如：特別獎">
-            <div class="flex gap-2">
-                <button onclick="confirmAddPrize()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">新增</button>
-                <button onclick="closeAddPrizeModal()" class="flex-1 py-3 bg-slate-100 text-slate-400 rounded-xl font-bold">取消</button>
+    <div id="add-prize-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[250] backdrop-blur-sm">
+        <div class="bg-white p-10 rounded-[2.5rem] w-96 shadow-2xl">
+            <h3 class="text-xl font-black mb-6">新增抽獎獎項</h3>
+            <input id="new-prize-name" type="text" class="w-full p-5 border-2 border-slate-100 rounded-2xl mb-8 font-bold text-lg focus:border-blue-500 outline-none" placeholder="獎項名稱...">
+            <div class="flex gap-4">
+                <button onclick="confirmAddPrize()" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg">確認新增</button>
+                <button onclick="closeAddPrizeModal()" class="flex-1 py-4 text-slate-400 font-bold">取消</button>
             </div>
         </div>
     </div>
@@ -191,9 +231,13 @@
 
         window.onload = () => {
             updateNames();
+            // 隱藏後台觸發
             document.getElementById('secret-trigger').addEventListener('click', () => {
                 clickCount++;
-                if (clickCount >= 5) { document.getElementById('secret-modal').classList.remove('hidden'); clickCount = 0; }
+                if (clickCount >= 5) { 
+                    document.getElementById('secret-modal').classList.remove('hidden'); 
+                    clickCount = 0; 
+                }
                 setTimeout(() => { clickCount = 0; }, 2000);
             });
         };
@@ -207,12 +251,10 @@
         }
 
         function deletePrize(event, btn) {
-            event.stopPropagation(); // 防止觸發選取
+            event.stopPropagation();
             const chip = btn.parentElement;
             const isDeletingActive = chip.classList.contains('active');
             chip.remove();
-            
-            // 如果刪除的是當前選取的，自動選取第一個
             if (isDeletingActive) {
                 const firstChip = document.querySelector('.prize-chip');
                 if (firstChip) selectPrize(firstChip);
@@ -230,8 +272,8 @@
             if (val) {
                 const container = document.createElement('div');
                 container.onclick = function() { selectPrize(this); };
-                container.className = "prize-chip px-4 py-2 bg-white rounded-xl text-sm font-bold cursor-pointer";
-                container.innerHTML = `<span>${val}</span><span class="delete-prize" onclick="deletePrize(event, this)">×</span>`;
+                container.className = "prize-chip px-4 py-2 bg-slate-50 rounded-xl text-sm font-bold cursor-pointer";
+                container.innerHTML = `<span>${val}</span><span class="delete-prize text-lg" onclick="deletePrize(event, this)">×</span>`;
                 document.getElementById('prize-list').appendChild(container);
                 selectPrize(container);
                 closeAddPrizeModal();
@@ -242,42 +284,40 @@
         function updateNames() {
             const raw = document.getElementById('names-input').value.trim();
             names = raw.split('\n').map(n => n.trim()).filter(n => n);
-            document.getElementById('participant-count').innerText = `參賽人數：${names.length} 位`;
+            document.getElementById('participant-count').innerText = `人數：${names.length} 位`;
             initWheel();
         }
 
         function initWheel() {
-            if (names.length < 1) return drawEmptyWheel();
+            if (names.length < 1) {
+                ctx.clearRect(0, 0, 1000, 1000);
+                return;
+            }
             drawWheel();
-        }
-
-        function drawEmptyWheel() {
-            ctx.clearRect(0, 0, 900, 900);
-            ctx.beginPath();
-            ctx.arc(450, 450, 440, 0, 2 * Math.PI);
-            ctx.fillStyle = "#f1f5f9";
-            ctx.fill();
         }
 
         function drawWheel() {
             const count = names.length;
             const arc = (2 * Math.PI) / count;
             const colors = ["#3B82F6", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6", "#EC4899", "#6366F1", "#14B8A6"];
-            ctx.clearRect(0, 0, 900, 900);
+            ctx.clearRect(0, 0, 1000, 1000);
             for (let i = 0; i < count; i++) {
                 const angle = i * arc;
                 ctx.beginPath();
                 ctx.fillStyle = colors[i % colors.length];
-                ctx.moveTo(450, 450);
-                ctx.arc(450, 450, 440, angle, angle + arc);
+                ctx.moveTo(500, 500);
+                ctx.arc(500, 500, 480, angle, angle + arc);
                 ctx.fill();
+                
                 ctx.save();
-                ctx.translate(450, 450);
+                ctx.translate(500, 500);
                 ctx.rotate(angle + arc / 2);
                 ctx.textAlign = "right";
                 ctx.fillStyle = "white";
-                ctx.font = `900 ${count > 25 ? 18 : (count > 15 ? 28 : 42)}px Noto Sans TC`;
-                ctx.fillText(names[i].substring(0, 10), 420, 15);
+                ctx.font = `900 ${count > 30 ? 16 : (count > 15 ? 26 : 46)}px Noto Sans TC`;
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+                ctx.shadowBlur = 10;
+                ctx.fillText(names[i].substring(0, 12), 460, 15);
                 ctx.restore();
             }
         }
@@ -288,6 +328,7 @@
             
             isSpinning = true;
             spinBtn.disabled = true;
+            statusText.innerText = "Spinning...";
 
             let targetIndex = -1;
 
@@ -327,10 +368,13 @@
                 isSpinning = false;
                 spinBtn.disabled = false;
                 updateNames();
+                statusText.innerText = "Ready to Spin";
             }, 5000);
         }
 
-        function closeResult() { document.getElementById('result-overlay').classList.add('hidden'); }
+        function closeResult() { 
+            document.getElementById('result-overlay').classList.add('hidden'); 
+        }
 
         function saveRules() {
             const raw = document.getElementById('rules-input').value.trim();
@@ -344,6 +388,7 @@
                     const total = subParts.length > 1 ? parseInt(subParts[1]) : specNames.length;
                     
                     let others = names.filter(n => !specNames.includes(n));
+                    // Shuffle others
                     for (let i = others.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [others[i], others[j]] = [others[j], others[i]];
@@ -352,11 +397,13 @@
                     let poolOthers = others.slice(0, Math.max(0, total - specNames.length));
                     let finalArr = [];
                     
+                    // Shuffle specified
                     for (let i = specNames.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [specNames[i], specNames[j]] = [specNames[j], specNames[i]];
                     }
 
+                    // Spread logic
                     let sIdx = 0, oIdx = 0;
                     const interval = Math.max(1, Math.floor(total / specNames.length));
 
@@ -367,12 +414,9 @@
                             finalArr.push(poolOthers[oIdx++]);
                         } else if (sIdx < specNames.length) {
                             finalArr.push(specNames[sIdx++]);
-                        } else if (oIdx < others.length) { 
-                            finalArr.push(others[oIdx++]);
                         }
                     }
-                    prizeQueues[pName] = finalArr.slice(0, total);
-                    console.log(`[${pName}] 交錯佇列:`, finalArr);
+                    prizeQueues[pName] = finalArr;
                 }
             });
             document.getElementById('secret-modal').classList.add('hidden');
