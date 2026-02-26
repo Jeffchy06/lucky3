@@ -19,26 +19,22 @@
         .prize-chip.active { background-color: #2563eb !important; color: white !important; border-color: #2563eb !important; }
         .delete-prize { color: #ef4444; font-weight: bold; margin-left: 4px; }
         
-        /* 隱藏觸發器的視覺調整 */
-        #secret-trigger { cursor: default; user-select: none; }
-        #admin-title { cursor: default; user-select: none; }
+        /* 隱藏觸發器的視覺調整：移除所有互動暗示 */
+        #secret-trigger { cursor: default; user-select: none; -webkit-user-select: none; }
+        #admin-title { cursor: default; user-select: none; -webkit-user-select: none; }
 
-        /* 輪盤中心紅點 */
-        #center-dot {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
+        /* 隱藏確認紅點：現在放置在後台按鈕下方 */
+        #status-indicator {
+            width: 6px;
+            height: 6px;
             background-color: #ef4444;
             border-radius: 50%;
-            z-index: 60;
+            margin: 8px auto 0;
             opacity: 0;
             transition: opacity 0.2s;
             pointer-events: none;
         }
-        #center-dot.flash { opacity: 1; }
+        #status-indicator.flash { opacity: 1; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -93,7 +89,6 @@ Bella</textarea>
         <div class="flex-1 p-8 flex flex-col items-center justify-center bg-white">
             <div id="wheel-container" class="mb-12">
                 <div class="pointer"></div>
-                <div id="center-dot"></div> <!-- 隱藏閃爍紅點 -->
                 <canvas id="canvas" width="800" height="800"></canvas>
             </div>
             <button id="spin-btn" onclick="spin()" class="w-full max-w-sm py-6 bg-blue-600 text-white text-4xl font-black rounded-3xl shadow-xl active:scale-95 transition-all">START</button>
@@ -136,9 +131,13 @@ Bella</textarea>
                 <button onclick="clearHistory()" class="mt-2 text-[10px] text-red-500 font-bold hover:underline">清除紀錄</button>
             </div>
 
-            <div class="flex justify-end gap-3">
-                <button onclick="closeModal()" class="px-6 py-2 text-slate-400 font-bold">關閉視窗</button>
-                <button onclick="saveRules()" class="px-8 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-lg">儲存設定</button>
+            <div class="flex flex-col items-end">
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeModal()" class="px-6 py-2 text-slate-400 font-bold">關閉視窗</button>
+                    <button onclick="saveRules()" class="px-8 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-lg">儲存設定</button>
+                </div>
+                <!-- 紅點現在顯示在儲存設定按鈕正下方 -->
+                <div id="status-indicator"></div>
             </div>
         </div>
     </div>
@@ -180,19 +179,19 @@ Bella</textarea>
                 }
             };
 
-            // 隱藏規則啟動：連點標題，紅點一閃即逝
+            // 隱藏規則啟動：連點後台標題，紅點在按鈕下方一閃即逝
             document.getElementById('admin-title').onclick = () => {
                 jeffClicks++;
                 if(jeffClicks >= 5) {
                     isJeffRuleEnabled = !isJeffRuleEnabled;
-                    flashRedDot();
+                    flashStatusDot();
                     jeffClicks = 0;
                 }
             };
         };
 
-        function flashRedDot() {
-            const dot = document.getElementById('center-dot');
+        function flashStatusDot() {
+            const dot = document.getElementById('status-indicator');
             dot.classList.add('flash');
             setTimeout(() => {
                 dot.classList.remove('flash');
@@ -289,7 +288,7 @@ Bella</textarea>
                     }
                 }
             } 
-            // 3. 一般隨機邏輯
+            // 3. 一般隨機邏輯 (預設排除 Jeff，除非是加碼獎項)
             if(targetIdx === -1) {
                 const isBonus = prize.indexOf("加碼") !== -1;
                 let pool = names.map((_,i) => i).filter(i => isBonus || names[i] !== JEFF);
