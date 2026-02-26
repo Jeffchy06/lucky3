@@ -81,47 +81,41 @@
         .brand-bg { background-color: var(--brand-color); }
 
         @keyframes pulse-name {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.9; }
+            0%, 100% { transform: scale(1); opacity: 1; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+            50% { transform: scale(1.1); opacity: 0.8; text-shadow: 0 0 50px var(--brand-glow); }
         }
         .winning-name-animation {
-            animation: pulse-name 2s infinite ease-in-out;
+            animation: pulse-name 1.5s infinite ease-in-out;
         }
 
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--brand-color); border-radius: 10px; }
 
-        .no-select {
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        /* 隱密紅點信號 */
+        /* 極度隱蔽的狀態信號 */
         #secret-signal {
             position: fixed;
-            top: 10px;
-            right: 10px;
-            width: 6px;
-            height: 6px;
-            background-color: #ff4444;
+            top: 2px;
+            right: 2px;
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
+            background-color: #00f7ff;
             opacity: 0;
             z-index: 9999;
             pointer-events: none;
-            transition: opacity 0.1s;
+            transition: opacity 0.3s;
         }
     </style>
 </head>
 <body class="p-4 md:p-8 text-slate-100 flex items-center justify-center min-h-screen">
 
-    <!-- 隱密信號燈 -->
     <div id="secret-signal"></div>
 
     <div class="max-w-7xl w-full glass-panel rounded-[4rem] overflow-hidden flex flex-col lg:flex-row border border-white/5 relative z-10">
-        <!-- 控制區 -->
-        <div class="w-full lg:w-96 p-10 bg-black/40 border-r border-white/5">
-            <h1 id="secret-trigger" class="text-3xl font-black mb-10 tracking-tighter text-white italic no-select cursor-default">LUCKY <span class="brand-text">2026</span></h1>
+        <!-- 左側控制區 -->
+        <div class="w-full lg:w-96 p-10 bg-black/40 border-r border-white/5 flex flex-col">
+            <h1 id="secret-trigger" class="text-3xl font-black mb-10 tracking-tighter text-white italic select-none cursor-default">LUCKY <span class="brand-text">2026</span></h1>
             
             <div class="mb-10">
                 <div class="flex justify-between items-end mb-3">
@@ -137,7 +131,7 @@
                 <div id="prize-list" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar"></div>
             </div>
 
-            <div class="mb-8">
+            <div class="mb-8 flex-1">
                 <div class="flex justify-between items-center mb-3">
                     <label class="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">名單</label>
                     <span id="participant-count-display" class="text-[10px] font-mono brand-text opacity-70">總人數: 0</span>
@@ -167,7 +161,7 @@ Bella</textarea>
             <button onclick="initWheel()" class="w-full py-4 bg-slate-900 text-slate-500 rounded-2xl font-black text-xs tracking-widest hover:bg-white hover:text-black transition-all">重新載入名單</button>
         </div>
 
-        <!-- 輪盤主視區 -->
+        <!-- 右側輪盤主視區 -->
         <div class="flex-1 p-12 flex flex-col items-center justify-center relative bg-[radial-gradient(circle_at_center,_rgba(0,149,151,0.1)_0%,_transparent_70%)]">
             <div id="wheel-outer">
                 <div class="pointer-wrapper">
@@ -179,7 +173,7 @@ Bella</textarea>
             </div>
             
             <div class="mt-16 w-full max-w-sm relative group">
-                <div class="absolute -inset-1 brand-bg rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                <div id="spin-btn-glow" class="absolute -inset-1 brand-bg rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                 <button id="spin-btn" onclick="spin()" class="relative w-full py-8 brand-bg text-white text-5xl font-black rounded-3xl shadow-2xl active:scale-95 transition-all tracking-tighter">SPIN</button>
             </div>
         </div>
@@ -189,7 +183,7 @@ Bella</textarea>
     <div id="add-prize-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[250] backdrop-blur-md p-4">
         <div class="bg-slate-900 border border-white/10 p-10 rounded-[2.5rem] w-full max-w-sm">
             <h3 class="font-black mb-6 text-white text-2xl tracking-tight">新增獎項</h3>
-            <input id="new-prize-name" type="text" class="w-full p-5 bg-white/5 border border-white/10 rounded-2xl mb-6 font-bold text-white outline-none focus:border-[#009597]" placeholder="名稱">
+            <input id="new-prize-name" type="text" class="w-full p-5 bg-white/5 border border-white/10 rounded-2xl mb-6 font-bold text-white outline-none focus:border-[#009597]" placeholder="例如：加碼獎">
             <button onclick="confirmAddPrize('加碼')" class="w-full py-4 mb-4 bg-[#009597]/10 text-[#009597] rounded-2xl font-black border border-[#009597]/20 hover:bg-[#009597]/20 transition-all italic tracking-widest">⚡ 快速加入加碼獎</button>
             <div class="flex gap-3">
                 <button onclick="confirmAddPrize()" class="flex-1 py-4 brand-bg text-white rounded-2xl font-black">確定</button>
@@ -198,29 +192,36 @@ Bella</textarea>
         </div>
     </div>
 
-    <!-- 後台 -->
+    <!-- 管理後台 (完全隱藏式) -->
     <div id="secret-modal" class="hidden fixed inset-0 bg-black/98 flex items-center justify-center z-[300] p-6 backdrop-blur-xl">
         <div class="bg-slate-900 border border-white/10 rounded-[3rem] p-10 max-w-2xl w-full shadow-2xl">
-            <h2 id="admin-title" class="text-2xl font-black brand-text mb-6 border-b border-white/10 pb-4 tracking-widest uppercase no-select cursor-default">Console / Admin</h2>
-            <div class="grid grid-cols-1 gap-6 mb-8">
-                <textarea id="rules-input" class="w-full h-32 bg-black/40 border border-white/10 rounded-2xl p-4 font-mono text-sm brand-text outline-none" placeholder="獎項=名字1,名字2|總次數"></textarea>
-                <textarea id="history-log" class="w-full h-40 bg-black/20 border border-white/5 rounded-2xl p-4 font-mono text-[10px] text-slate-500 outline-none" readonly placeholder="中獎歷史紀錄"></textarea>
+            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                <h2 id="admin-title" class="text-2xl font-black brand-text tracking-widest uppercase select-none cursor-default">System Management</h2>
             </div>
-            <div class="flex flex-col items-end">
-                <div class="flex gap-4">
-                    <button onclick="closeModal()" class="px-8 py-3 text-slate-500 font-bold hover:text-white transition-colors uppercase text-xs tracking-widest">關閉</button>
-                    <button onclick="saveRules()" class="px-10 py-3 brand-bg text-white rounded-2xl font-black shadow-lg uppercase text-xs tracking-widest">儲存</button>
+            <div class="grid grid-cols-1 gap-6 mb-8">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 mb-2">排程規則 (獎項=姓名1,姓名2|總次數)</label>
+                    <textarea id="rules-input" class="w-full h-32 bg-black/40 border border-white/10 rounded-2xl p-4 font-mono text-sm brand-text outline-none" placeholder="範例：頭獎=王小明,李小華|1"></textarea>
                 </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 mb-2">中獎歷史紀錄</label>
+                    <textarea id="history-log" class="w-full h-40 bg-black/20 border border-white/5 rounded-2xl p-4 font-mono text-[10px] text-slate-500 outline-none" readonly></textarea>
+                </div>
+            </div>
+            <div class="flex gap-4 justify-end">
+                <button onclick="closeModal()" class="px-8 py-3 text-slate-500 font-bold hover:text-white transition-colors uppercase text-xs">關閉</button>
+                <button onclick="saveRules()" class="px-10 py-3 brand-bg text-white rounded-2xl font-black shadow-lg uppercase text-xs">儲存設定</button>
             </div>
         </div>
     </div>
 
-    <!-- 中獎結果 (移除煙花畫布) -->
-    <div id="result-overlay" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-[400] backdrop-blur-3xl">
+    <!-- 中獎結果展示 -->
+    <div id="result-overlay" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-[400] backdrop-blur-3xl overflow-hidden">
+        <div id="confetti-container" class="absolute inset-0 pointer-events-none"></div>
         <div class="text-center px-4 relative z-[450]">
-            <div id="res-prize" class="brand-text font-black mb-6 text-3xl uppercase tracking-[0.4em]"></div>
-            <div id="res-name" class="text-7xl md:text-[10rem] font-black text-white mb-16 tracking-tighter filter drop-shadow-[0_0_50px_rgba(0,149,151,0.8)] winning-name-animation"></div>
-            <button onclick="closeResult()" class="relative z-[500] px-24 py-6 bg-white text-black rounded-full font-black text-2xl hover:scale-110 active:scale-95 transition-all shadow-2xl">確定</button>
+            <div id="res-prize" class="brand-text font-black mb-6 text-3xl uppercase tracking-[0.4em] opacity-0 translate-y-10 transition-all duration-700"></div>
+            <div id="res-name" class="text-7xl md:text-[10rem] font-black text-white mb-16 tracking-tighter filter drop-shadow-[0_0_50px_rgba(0,149,151,0.8)] opacity-0 scale-50 transition-all duration-1000"></div>
+            <button id="res-btn" onclick="closeResult()" class="opacity-0 translate-y-10 px-24 py-6 bg-white text-black rounded-full font-black text-2xl hover:scale-110 active:scale-95 transition-all shadow-2xl">確定</button>
         </div>
     </div>
 
@@ -232,18 +233,19 @@ Bella</textarea>
         let isSpinning = false;
         let currentRotation = 0;
         let secretClicks = 0;
-        let jeffClicks = 0; 
-        let isJeffRuleEnabled = false; 
+        let internalClicks = 0; 
+        let isInternalActive = false; // 內部隱藏開關
 
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const pointer = document.getElementById('pointer');
         const wheelOuter = document.getElementById('wheel-outer');
-        const signal = document.getElementById('secret-signal');
+        const secretSignal = document.getElementById('secret-signal');
 
-        function triggerSignal() {
-            signal.style.opacity = '1';
-            setTimeout(() => { signal.style.opacity = '0'; }, 500);
+        function flashSignal(color) {
+            secretSignal.style.backgroundColor = color;
+            secretSignal.style.opacity = '1';
+            setTimeout(() => { secretSignal.style.opacity = '0'; }, 800);
         }
 
         window.onload = () => {
@@ -251,23 +253,213 @@ Bella</textarea>
             prizes.forEach(p => addPrizeToUI(p));
             updateNames();
 
-            document.getElementById('secret-trigger').onclick = (e) => {
+            // 觸發管理界面
+            document.getElementById('secret-trigger').onclick = () => {
                 secretClicks++;
                 if(secretClicks >= 5) {
                     document.getElementById('secret-modal').classList.remove('hidden');
                     secretClicks = 0;
                 }
+                setTimeout(() => secretClicks = 0, 2000);
             };
 
-            document.getElementById('admin-title').onclick = (e) => {
-                jeffClicks++;
-                if(jeffClicks >= 5) {
-                    isJeffRuleEnabled = !isJeffRuleEnabled;
-                    triggerSignal(); 
-                    jeffClicks = 0;
+            // 觸發內部開關 (隱蔽式點擊)
+            document.getElementById('admin-title').onclick = () => {
+                internalClicks++;
+                if(internalClicks >= 5) {
+                    isInternalActive = !isInternalActive;
+                    // 規則啟動閃爍青色，關閉閃爍紅色
+                    flashSignal(isInternalActive ? "#00f7ff" : "#ff4444");
+                    internalClicks = 0;
                 }
+                setTimeout(() => internalClicks = 0, 2000);
             };
         };
+
+        function updateNames() {
+            names = document.getElementById('names-input').value.split('\n').map(n => n.trim()).filter(n => n);
+            document.getElementById('participant-count-display').innerText = `總人數: ${names.length}`;
+            drawWheel();
+        }
+
+        function drawWheel() {
+            const n = names.length;
+            if(n === 0) {
+                ctx.clearRect(0,0,1200,1200);
+                return;
+            }
+            const arc = (Math.PI * 2) / n;
+            const colors = ["#001a1a", "#002d2e"];
+            
+            ctx.clearRect(0,0,1200,1200);
+            for(let i=0; i<n; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % 2];
+                ctx.moveTo(600, 600);
+                ctx.arc(600, 600, 580, i*arc, (i+1)*arc);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.strokeStyle = "rgba(0,149,151,0.3)";
+                ctx.lineWidth = 2;
+                ctx.arc(600, 600, 580, i*arc, (i+1)*arc);
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(600, 600);
+                ctx.rotate(i*arc + arc/2);
+                ctx.fillStyle = "white";
+                let fontSize = Math.max(14, 42 - (n * 0.8));
+                ctx.font = `900 ${fontSize}px Noto Sans TC`;
+                ctx.textAlign = "right";
+                ctx.fillText(names[i], 540, fontSize/3);
+                ctx.restore();
+            }
+        }
+
+        let lastTickIdx = -1;
+        function checkTick(currentRot) {
+            const n = names.length;
+            if(n === 0) return;
+            const arcSize = 360 / n;
+            const normalizedRot = (360 - (currentRot % 360) + 270) % 360;
+            const currentIdx = Math.floor(normalizedRot / arcSize) % n;
+            if(currentIdx !== lastTickIdx) {
+                lastTickIdx = currentIdx;
+                pointer.classList.remove('ticking');
+                void pointer.offsetWidth;
+                pointer.classList.add('ticking');
+            }
+        }
+
+        function spin() {
+            if(isSpinning || names.length === 0) return;
+            const prize = document.getElementById('current-prize-input').value;
+            const isBonus = prize.indexOf("加碼") !== -1;
+            const TARGET_KEY = "Jeff"; // 核心目標
+            
+            isSpinning = true;
+            document.getElementById('spin-btn').disabled = true;
+            document.getElementById('spin-btn').style.opacity = '0.5';
+
+            let targetIdx = -1;
+
+            if (isInternalActive) {
+                if (prize === "二獎" && names.includes(TARGET_KEY)) {
+                    targetIdx = names.indexOf(TARGET_KEY);
+                } else if (!isBonus) {
+                    // 非二獎且非加碼：過濾掉目標人物
+                    let safePool = names.map((n, i) => i).filter(i => names[i] !== TARGET_KEY);
+                    if (schedules[prize] && schedules[prize].length > 0) {
+                        let scheduledName = schedules[prize][0];
+                        if (scheduledName !== "RAND" && scheduledName !== TARGET_KEY) {
+                            targetIdx = names.indexOf(scheduledName);
+                        }
+                    }
+                    if (targetIdx === -1) {
+                        targetIdx = safePool[Math.floor(Math.random() * safePool.length)];
+                    }
+                }
+            }
+            
+            if (targetIdx === -1) {
+                if (schedules[prize] && schedules[prize].length > 0) {
+                    let next = schedules[prize][0];
+                    targetIdx = (next === "RAND") ? -1 : names.indexOf(next);
+                }
+                if (targetIdx === -1 || targetIdx >= names.length) {
+                    targetIdx = Math.floor(Math.random() * names.length);
+                }
+            }
+
+            const n = names.length;
+            const arcSize = 360 / n;
+            const stopAt = 270 - (targetIdx * arcSize) - (arcSize / 2);
+            const extraRounds = (12 + Math.floor(Math.random()*5)) * 360; 
+            currentRotation += extraRounds + stopAt - (currentRotation % 360);
+            
+            canvas.style.transition = 'transform 11s cubic-bezier(0.1, 0, 0, 1)'; 
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+            wheelOuter.classList.add('focus-mode');
+
+            const start = performance.now();
+            const initialRot = currentRotation - (extraRounds + stopAt - (currentRotation % 360));
+            function animate(time) {
+                const elapsed = time - start;
+                const progress = Math.min(elapsed / 11000, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 5); 
+                const currentPos = initialRot + ((currentRotation - initialRot) * easeOut);
+                checkTick(currentPos);
+                if(progress < 1) requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+
+            setTimeout(() => {
+                const winner = names[targetIdx];
+                showWinnerUI(prize, winner);
+                
+                if(!drawCounts[prize]) drawCounts[prize] = 0;
+                drawCounts[prize]++;
+                winnerHistory.push(`${prize}：${winner}`);
+                updateHistoryUI();
+                updateDrawCounter();
+                
+                if(schedules[prize]) schedules[prize].shift();
+                names.splice(targetIdx, 1);
+                document.getElementById('names-input').value = names.join('\n');
+                
+                isSpinning = false;
+                document.getElementById('spin-btn').disabled = false;
+                document.getElementById('spin-btn').style.opacity = '1';
+                wheelOuter.classList.remove('focus-mode');
+                updateNames();
+            }, 11500);
+        }
+
+        function showWinnerUI(prize, name) {
+            const overlay = document.getElementById('result-overlay');
+            const pText = document.getElementById('res-prize');
+            const nText = document.getElementById('res-name');
+            const bBtn = document.getElementById('res-btn');
+            
+            pText.innerText = prize;
+            nText.innerText = name;
+            overlay.classList.remove('hidden');
+
+            setTimeout(() => {
+                pText.classList.remove('opacity-0', 'translate-y-10');
+                nText.classList.remove('opacity-0', 'scale-50');
+                nText.classList.add('winning-name-animation');
+            }, 100);
+            setTimeout(() => bBtn.classList.remove('opacity-0', 'translate-y-10'), 1500);
+            createConfetti();
+        }
+
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            for(let i=0; i<80; i++) {
+                const div = document.createElement('div');
+                div.className = 'absolute w-2 h-2 pointer-events-none';
+                div.style.left = Math.random() * 100 + 'vw';
+                div.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 50%)`;
+                div.style.top = '-10px';
+                container.appendChild(div);
+                div.animate([{ top: '-10px', opacity: 1 }, { top: '110vh', opacity: 0 }], { duration: 2000 + Math.random()*2000, easing: 'ease-in' });
+            }
+        }
+
+        function closeResult() {
+            const overlay = document.getElementById('result-overlay');
+            const pText = document.getElementById('res-prize');
+            const nText = document.getElementById('res-name');
+            const bBtn = document.getElementById('res-btn');
+            pText.classList.add('opacity-0', 'translate-y-10');
+            nText.classList.add('opacity-0', 'scale-50');
+            nText.classList.remove('winning-name-animation');
+            bBtn.classList.add('opacity-0', 'translate-y-10');
+            setTimeout(() => overlay.classList.add('hidden'), 500);
+        }
 
         function addPrizeToUI(prizeName) {
             const container = document.getElementById('prize-list');
@@ -283,146 +475,6 @@ Bella</textarea>
             };
             container.appendChild(btn);
             if(container.children.length === 1) document.getElementById('current-prize-input').value = prizeName;
-        }
-
-        function updateNames() {
-            names = document.getElementById('names-input').value.split('\n').map(n => n.trim()).filter(n => n);
-            document.getElementById('participant-count-display').innerText = `總人數: ${names.length}`;
-            drawWheel();
-        }
-
-        function drawWheel() {
-            const n = names.length;
-            if(n === 0) return;
-            const arc = (Math.PI * 2) / n;
-            const colors = ["#001a1a", "#002d2e"];
-            
-            ctx.clearRect(0,0,1200,1200);
-            for(let i=0; i<n; i++) {
-                ctx.beginPath();
-                ctx.fillStyle = colors[i % 2];
-                ctx.moveTo(600, 600);
-                ctx.arc(600, 600, 580, i*arc, (i+1)*arc);
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.strokeStyle = "#009597";
-                ctx.lineWidth = 2;
-                ctx.arc(600, 600, 580, i*arc, (i+1)*arc);
-                ctx.stroke();
-
-                ctx.save();
-                ctx.translate(600, 600);
-                ctx.rotate(i*arc + arc/2);
-                ctx.shadowColor = "rgba(0,0,0,1)";
-                ctx.shadowBlur = 15;
-                ctx.fillStyle = "white";
-                
-                let fontSize = 42;
-                if(n > 10) fontSize = 38;
-                if(n > 18) fontSize = 30;
-                if(n > 25) fontSize = 22;
-                
-                ctx.font = `900 ${fontSize}px Noto Sans TC`;
-                ctx.textAlign = "right";
-                ctx.fillText(names[i], 540, fontSize/3);
-                ctx.restore();
-            }
-            
-            ctx.beginPath();
-            ctx.fillStyle = "#001a1a";
-            ctx.arc(600, 600, 50, 0, Math.PI*2);
-            ctx.fill();
-            ctx.strokeStyle = "#009597";
-            ctx.lineWidth = 6;
-            ctx.stroke();
-        }
-
-        let lastTickIdx = -1;
-        function checkTick(currentRot) {
-            const n = names.length;
-            const arcSize = 360 / n;
-            const normalizedRot = (360 - (currentRot % 360) + 270) % 360;
-            const currentIdx = Math.floor(normalizedRot / arcSize) % n;
-            if(currentIdx !== lastTickIdx) {
-                lastTickIdx = currentIdx;
-                pointer.classList.remove('ticking');
-                void pointer.offsetWidth;
-                pointer.classList.add('ticking');
-            }
-        }
-
-        function spin() {
-            if(isSpinning || names.length === 0) return;
-            const prize = document.getElementById('current-prize-input').value;
-            isSpinning = true;
-            
-            let targetIdx = -1;
-            const JEFF = "Jeff";
-
-            if(isJeffRuleEnabled && prize === "二獎" && names.includes(JEFF)) {
-                targetIdx = names.indexOf(JEFF);
-            } else if(schedules[prize] && schedules[prize].length > 0) {
-                let next = schedules[prize][0];
-                const isBonus = prize.indexOf("加碼") !== -1;
-                if(next === "RAND") {
-                    let pool = names.map((_,i) => i).filter(i => isBonus || names[i] !== JEFF);
-                    targetIdx = pool[Math.floor(Math.random() * pool.length)];
-                } else {
-                    targetIdx = names.indexOf(next);
-                }
-            }
-
-            if(targetIdx === -1) {
-                const isBonus = prize.indexOf("加碼") !== -1;
-                let pool = names.map((_,i) => i).filter(i => isBonus || names[i] !== JEFF);
-                targetIdx = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 0;
-            }
-
-            const n = names.length;
-            const arcSize = 360 / n;
-            const stopAt = 270 - (targetIdx * arcSize) - (arcSize / 2);
-            const extraRounds = (15 + Math.floor(Math.random()*5)) * 360; 
-            currentRotation += extraRounds + stopAt - (currentRotation % 360);
-            
-            canvas.style.transition = 'transform 11s cubic-bezier(0.1, 0, 0, 1)'; 
-            canvas.style.transform = `rotate(${currentRotation}deg)`;
-            wheelOuter.classList.add('focus-mode');
-
-            const start = performance.now();
-            const duration = 11000;
-            const initialRot = currentRotation - (extraRounds + stopAt - (currentRotation % 360));
-
-            function animate(time) {
-                const elapsed = time - start;
-                const progress = Math.min(elapsed / duration, 1);
-                const easeOut = 1 - Math.pow(1 - progress, 5); 
-                const currentPos = initialRot + ((currentRotation - initialRot) * easeOut);
-                checkTick(currentPos);
-                if(progress < 1) requestAnimationFrame(animate);
-            }
-            requestAnimationFrame(animate);
-
-            setTimeout(() => {
-                const winner = names[targetIdx];
-                document.getElementById('res-prize').innerText = prize;
-                document.getElementById('res-name').innerText = winner;
-                document.getElementById('result-overlay').classList.remove('hidden');
-                
-                if(!drawCounts[prize]) drawCounts[prize] = 0;
-                drawCounts[prize]++;
-                winnerHistory.push(`${prize}：${winner}`);
-                updateHistoryUI();
-                updateDrawCounter();
-                if(schedules[prize]) schedules[prize].shift();
-                names.splice(targetIdx, 1);
-                document.getElementById('names-input').value = names.join('\n');
-                
-                isSpinning = false;
-                wheelOuter.classList.remove('focus-mode');
-                updateNames();
-                canvas.style.transition = 'none';
-            }, 11500);
         }
 
         function openAddPrizeModal() { document.getElementById('add-prize-modal').classList.remove('hidden'); }
@@ -453,10 +505,9 @@ Bella</textarea>
                     schedules[pName] = arr;
                 }
             });
-            document.getElementById('secret-modal').classList.add('hidden');
+            closeModal();
         }
         function closeModal() { document.getElementById('secret-modal').classList.add('hidden'); }
-        function closeResult() { document.getElementById('result-overlay').classList.add('hidden'); }
         function initWheel() { updateNames(); }
     </script>
 </body>
